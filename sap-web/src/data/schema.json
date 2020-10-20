@@ -1,0 +1,16 @@
+{   
+    "SCHEMAS":[
+        {
+        "SCHEMA_NAME": "SCHEMA 1" 
+        },
+        {
+        "SCHEMA_NAME": "SCHEMA 2" 
+        },
+        {
+        "SCHEMA_NAME": "SCHEMA 3" 
+        }
+
+
+    ]
+
+}
