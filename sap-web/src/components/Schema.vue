@@ -7,6 +7,7 @@
           dark
           v-bind="attrs"
           v-on="on"
+          style="min-width: 300px; max-width: 100%;"
         >
           Select Schemas
           <v-icon>arrow_drop_down</v-icon>
