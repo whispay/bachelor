@@ -1,6 +1,6 @@
 <template>
   <v-card class="text-left" width="300">
-    <v-list  style="max-height: 500px"
+    <v-list  style="height: 600px; min-width: 3 00px; max-width: 100%;"
        class="overflow-y-auto">
       <v-list-group v-for="schema in schemas_selected" :key="schema.index" :value="true">
         <template v-slot:activator>
