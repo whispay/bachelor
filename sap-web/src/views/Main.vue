@@ -25,6 +25,7 @@ import Schema from "@/components/Schema";
 import Table from "@/components/Table";
 import TableList from "@/components/TableList";
 import Command from "@/components/Command";
+
 export default {
   components: { Schema, Table, TableList, Command },
 
@@ -38,5 +39,6 @@ export default {
       this.schemas_selected = updatedSchemaSelection;
     },
   },
+  
 };
 </script>
