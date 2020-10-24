@@ -14,6 +14,7 @@
       </v-row>
     </v-container>
 
+    <p>{{Schemas}} HIER </p>
     <br />
     <Table />
   </div>
@@ -25,6 +26,8 @@ import Schema from "@/components/Schema";
 import Table from "@/components/Table";
 import TableList from "@/components/TableList";
 import Command from "@/components/Command";
+import axios from 'axios'
+
 
 export default {
   components: { Schema, Table, TableList, Command },
@@ -32,6 +35,7 @@ export default {
   data() {
     return {
       schemas_selected: [],
+      Schemas:"",
     };
   },
   methods: {
@@ -39,6 +43,17 @@ export default {
       this.schemas_selected = updatedSchemaSelection;
     },
   },
+     mounted(){
+    
+ 
+          // fetch data from a url endpoint
+          const response = axios.get('http://localhost:3000/');
+          
+            
+          this.Schemas = response;
+   
+      
+    }
   
 };
 </script>

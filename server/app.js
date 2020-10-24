@@ -7,6 +7,7 @@ const config = require('./config/config.json');
 //Connect to DB
 const hana = require("@sap/hana-client");
 
+
 const conn = hana.createConnection();
 var r;
 
