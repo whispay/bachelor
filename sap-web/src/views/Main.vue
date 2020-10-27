@@ -4,7 +4,7 @@
     <v-container>
       <v-row no-gutters style="flex-wrap: nowrap">
         <v-col cols="3">
-          <Schema v-on:schemaChangeEvent="updateSchema" />
+          <Schema v-on:schemaChangeEvent="updateSchema" :Schemas="Schemas" />
           <TableList v-bind:schemas_selected="schemas_selected" />
         </v-col>
 
@@ -45,12 +45,10 @@ export default {
   },
      mounted(){
     
- 
-          // fetch data from a url endpoint
-          const response = axios.get('http://localhost:3000/');
-          
-            
-          this.Schemas = response;
+     // fetch data from a url endpoint
+    const response = axios.get("http://localhost:3000/");
+    Promise.resolve(response).then((values) => {
+    this.Schemas = (JSON.stringify(values.data))});
    
       
     }

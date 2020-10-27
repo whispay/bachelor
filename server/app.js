@@ -2,7 +2,7 @@ const express = require('express');
 const app = express();
 const config = require('./config/config.json');
 //MIDDLEWARES - Function that executes when routes are beeing hit
-
+var cors = require('cors');
 
 //Connect to DB
 const hana = require("@sap/hana-client");
@@ -10,6 +10,7 @@ const hana = require("@sap/hana-client");
 
 const conn = hana.createConnection();
 var r;
+app.use(cors());
 
 conn.connect(config.dbAccess, err => {
     if(err){
@@ -30,6 +31,7 @@ conn.connect(config.dbAccess, err => {
 
 //ROUTES
 app.get('/', (req,res) =>{
+
     res.send(r);
 })
 

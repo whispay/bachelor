@@ -22,6 +22,7 @@
         </v-list-item>
 
       </v-list>
+     
     </v-menu>
     <!--<p>{{schemas_selected}}</p>-->
   </div>
@@ -32,11 +33,13 @@
 export default {
     
     created() {
-      const config = require('@/data/schema.json');
+      /*const config = require('@/data/schema.json');
       console.log(config.SCHEMAS.length);
       for(var i = 0; i < config.SCHEMAS.length; i++){
         this.SCHEMAS.push(config.SCHEMAS[i]);
-      }
+      }*/
+
+     
       
     },
 
@@ -45,7 +48,12 @@ export default {
       SCHEMAS: [],
       schemas_selected:[]
     }),
-
+    props: {
+        Schemas: {
+            type: String,
+            default: null
+        }
+    },
     methods:{
       emitSelection(){
           this.$emit('schemaChangeEvent', this.schemas_selected)
