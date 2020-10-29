@@ -5,6 +5,7 @@
       <v-row no-gutters style="flex-wrap: nowrap">
         <v-col cols="3">
           <Schema v-on:schemaChangeEvent="updateSchema" :Schemas="Schemas" />
+          
           <TableList v-bind:schemas_selected="schemas_selected" />
         </v-col>
 
@@ -13,8 +14,7 @@
         </v-col>
       </v-row>
     </v-container>
-
-    <p>{{Schemas}} HIER </p>
+    
     <br />
     <Table />
   </div>
@@ -26,7 +26,7 @@ import Schema from "@/components/Schema";
 import Table from "@/components/Table";
 import TableList from "@/components/TableList";
 import Command from "@/components/Command";
-import axios from 'axios'
+
 
 
 export default {
@@ -44,13 +44,8 @@ export default {
     },
   },
      mounted(){
-    
-     // fetch data from a url endpoint
-    const response = axios.get("http://localhost:3000/");
-    Promise.resolve(response).then((values) => {
-    this.Schemas = (JSON.stringify(values.data))});
-   
-      
+
+        
     }
   
 };

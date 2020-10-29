@@ -9,30 +9,44 @@ const hana = require("@sap/hana-client");
 
 
 const conn = hana.createConnection();
-var r;
+
 app.use(cors());
 
-conn.connect(config.dbAccess, err => {
+var r;
+
+function sapRequest (res, sql) {
+    conn.connect(config.dbAccess, err => {
     if(err){
         console.log(err);
+        conn.disconnect();
+        console.log("Server Disconnected")
     }else{
-        conn.exec("SELECT SCHEMA_NAME from SCHEMAS", (err, results) => {
+        conn.exec(sql, (err, results) => {
             if(err){
                 console.log(err);
+                conn.disconnect();
+                console.log("Server Disconnected")
             }else{
-                console.log(results);
-                r = results;
+                console.log("Schema",results);
+                conn.disconnect();
+                console.log("Server Disconnected")
+                res.send(results);
             }
         });
     }
 });
 
+}
 
 
 //ROUTES
-app.get('/', (req,res) =>{
-
-    res.send(r);
+app.get('/schemas', (req,res) =>{
+   sapRequest(res, "SELECT SCHEMA_NAME from SCHEMAS")
 })
+
+app.get('/tables', (req,res) =>{
+    sapRequest(res, "SELECT TABLE_NAME from TABLES WHERE SCHEMA_NAME = 'UPHAN' ")
+ })
+
 
 app.listen(3000);

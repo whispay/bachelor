@@ -1,6 +1,6 @@
 <template>
-  <v-card class="text-left" width="300">
-    <v-list  style="height: 600px; min-width: 3 00px; max-width: 100%;"
+  <v-card class="text-left">
+    <v-list  style="height: 600px;"
        class="overflow-y-auto">
       <v-list-group v-for="schema in schemas_selected" :key="schema.index" :value="true">
         <template v-slot:activator>
@@ -47,6 +47,8 @@
 </template>
 
 <script>
+import axios from 'axios'
+
 export default {
   props: {
       schemas_selected:{
@@ -59,5 +61,11 @@ export default {
     TABLES: [{ TABLE_NAME: "Table 1.1" }],
     COLUMNS: [{ COLUMN_NAME: "Column 1" }, { COLUMN_NAME: "Column 2" }],
   }),
+    mounted() {
+    // fetch data from a url endpoint
+    const response = axios.get("http://localhost:3000/schemas");
+    Promise.resolve(response).then((values) => {
+    this.Schemas = ((values.data))});
+  },
 };
 </script>

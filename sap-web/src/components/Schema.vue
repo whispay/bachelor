@@ -7,7 +7,7 @@
           dark
           v-bind="attrs"
           v-on="on"
-          style="min-width: 300px; max-width: 100%;"
+       
         >
           Select Schemas
           <v-icon>arrow_drop_down</v-icon>
@@ -15,20 +15,22 @@
       </template>
       <v-list>
         <v-list-item
-          v-for="(schema, index) in SCHEMAS"
+          v-for="(schema, index) in Schemas"
           :key="index"
         >
-          <v-list-item-title> <v-checkbox @click="emitSelection()" v-model="schemas_selected" :label="schema.SCHEMA_NAME" :value="schema.SCHEMA_NAME"></v-checkbox> </v-list-item-title>
+          <v-list-item-title><v-checkbox @click="emitSelection()" v-model="schemas_selected" :label="schema.SCHEMA_NAME" :value="schema.SCHEMA_NAME"></v-checkbox> </v-list-item-title>
         </v-list-item>
 
       </v-list>
-     
+  
     </v-menu>
     <!--<p>{{schemas_selected}}</p>-->
+
   </div>
 </template>
 
 <script>
+import axios from 'axios'
  //const sqlQuery= "Select * from schemas where schema_owner ='"+req.params.owner_name+"'";
 export default {
     
@@ -44,20 +46,27 @@ export default {
     },
 
 
-    data: () => ({
-      SCHEMAS: [],
-      schemas_selected:[]
-    }),
+   
+  data() {
+    return {
+      schemas_selected: [],
+      Schemas: null,
+      type: typeof this.Schemas
+    };
+  },
     props: {
-        Schemas: {
-            type: String,
-            default: null
-        }
+
     },
     methods:{
       emitSelection(){
           this.$emit('schemaChangeEvent', this.schemas_selected)
       }
-    }
+    },
+      mounted() {
+    // fetch data from a url endpoint
+    const response = axios.get("http://localhost:3000/schemas");
+    Promise.resolve(response).then((values) => {
+    this.Schemas = ((values.data))});
+  },
 }
 </script>
