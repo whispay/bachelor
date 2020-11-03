@@ -41,12 +41,40 @@ function sapRequest (res, sql) {
 
 //ROUTES
 app.get('/schemas', (req,res) =>{
-   sapRequest(res, "SELECT SCHEMA_NAME from SCHEMAS")
+   sapRequest(res, "SELECT * from SCHEMAS")
 })
 
-app.get('/tables', (req,res) =>{
-    sapRequest(res, "SELECT TABLE_NAME from TABLES WHERE SCHEMA_NAME = 'UPHAN' ")
+app.get('/schemas/schema_name=:schema_name', (req,res) =>{
+    var schema_names = req.params.schema_name.split("&");
+    var sql_query = "SELECT * from SCHEMAS WHERE ";
+    for(var i = 0; i < schema_names.length; i++){
+        if(i + 1 == schema_names.length){
+
+        }else{
+            sql_query = sql_query + "SCHEMA_NAME = " + schema_names[i] 
+        }
+        sql_query = sql_query + "SCHEMA_NAME = " + schema_names[i] + " OR "    
+    }
+
+    sapRequest(res, sql_query)
  })
 
 
+ app.get('/tables/schema_name=:schema_name', (req,res) =>{
+    var schema_names = req.params.schema_name.split("&");
+    var sql_query = "SELECT * from TABLES WHERE ";
+    for(var i = 0; i < schema_names.length; i++){
+        if(i + 1 == schema_names.length){
+            sql_query = sql_query + "SCHEMA_NAME = '" + schema_names[i] + "'"
+        }else{
+            sql_query = sql_query + "SCHEMA_NAME = " + schema_names[i] + " OR "  
+        }
+    }
+
+    sapRequest(res, sql_query)
+ })
+
+ app.get('/sql=:sql_query', (req,res) =>{
+    sapRequest(res, req.params.sql_query)
+ })
 app.listen(3000);

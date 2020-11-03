@@ -1,16 +1,20 @@
 <template>
   <v-card class="text-left">
-    <v-list  style="height: 600px;"
-       class="overflow-y-auto">
-      <v-list-group v-for="schema in schemas_selected" :key="schema.index" :value="true">
+    <!--
+    <v-list style="height: 600px" class="overflow-y-auto">
+      <v-list-group
+        v-for="schema in value[0]"
+        :key="schema.index"
+        :value="true"
+      >
         <template v-slot:activator>
-          <v-list-item-title>{{ schema }}</v-list-item-title>
+          <v-list-item-title>{{schema}}</v-list-item-title>
         </template>
         <v-list-group
           :value="true"
           no-action
           sub-group
-          v-for="table in TABLES"
+          v-for="table in value[1][0]"
           :key="table.index"
         >
           <template v-slot:activator>
@@ -18,6 +22,7 @@
               <v-list-item-title>{{ table.TABLE_NAME }}</v-list-item-title>
             </v-list-item-content>
           </template>
+          
           <v-list-item v-for="column in COLUMNS" :key="column.index" link>
             <v-list-item-icon>
               <v-icon>view_column</v-icon>
@@ -26,7 +31,36 @@
           </v-list-item>
         </v-list-group>
       </v-list-group>
+
+    </v-list>-->
+    <v-list style="height: 600px" class="overflow-y-auto">
+      <v-list-group
+        v-for="schema in value[0]"
+        :key="schema.index"
+        :value="true"
+      >
+        <template v-slot:activator>
+          <v-list-item-title>{{schema}}</v-list-item-title>
+        </template>
+        <v-list
+          :value="true"
+          no-action
+          sub-group
+          v-for="table in value[1][0]"
+          :key="table.index"
+        >
+      
+            <v-list-item>
+              <v-list-item-title><v-card></v-card><v-icon>subdirectory_arrow_right</v-icon>   {{ table.TABLE_NAME }}</v-list-item-title>
+            </v-list-item>
+      
+          
+         
+        </v-list>
+      </v-list-group>
+
     </v-list>
+   
   </v-card>
 
   <!--
@@ -47,25 +81,23 @@
 </template>
 
 <script>
-import axios from 'axios'
+//import axios from "axios";
 
 export default {
   props: {
-      schemas_selected:{
-          type:Array
-      }}
-      ,
-
+    //Value is the combined variable from tables_selected and schemas_selected
+    value:{
+       type: Array,
+    },
+  },
   data: () => ({
-    SCHEMAS: [{ SCHEMA_NAME: "Schema 1" }],
-    TABLES: [{ TABLE_NAME: "Table 1.1" }],
-    COLUMNS: [{ COLUMN_NAME: "Column 1" }, { COLUMN_NAME: "Column 2" }],
+  
   }),
-    mounted() {
-    // fetch data from a url endpoint
-    const response = axios.get("http://localhost:3000/schemas");
-    Promise.resolve(response).then((values) => {
-    this.Schemas = ((values.data))});
+  mounted() {
+  
+  },
+  methods: {
+      
   },
 };
 </script>
