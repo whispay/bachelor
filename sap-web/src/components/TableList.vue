@@ -40,7 +40,7 @@
         :value="true"
       >
         <template v-slot:activator>
-          <v-list-item-title>{{schema}}</v-list-item-title>
+          <v-list-item-title>{{ schema }}</v-list-item-title>
         </template>
         <v-list
           :value="true"
@@ -49,18 +49,22 @@
           v-for="table in value[1][0]"
           :key="table.index"
         >
-      
-            <v-list-item>
-              <v-list-item-title><v-card></v-card><v-icon>subdirectory_arrow_right</v-icon>   {{ table.TABLE_NAME }}</v-list-item-title>
-            </v-list-item>
-      
-          
+          <v-hover v-slot:default="{ hover }">
          
+            <v-list-item>
+              <v-card  :elevation="hover ? 12 : 2" class="pa-2">
+              <v-list-item-title
+                ><v-card></v-card><v-icon>subdirectory_arrow_right</v-icon>
+                {{ table.TABLE_NAME }}</v-list-item-title
+              >
+              </v-card>
+            </v-list-item>
+              
+          </v-hover>
+
         </v-list>
       </v-list-group>
-
     </v-list>
-   
   </v-card>
 
   <!--
@@ -86,18 +90,12 @@
 export default {
   props: {
     //Value is the combined variable from tables_selected and schemas_selected
-    value:{
-       type: Array,
+    value: {
+      type: Array,
     },
   },
-  data: () => ({
-  
-  }),
-  mounted() {
-  
-  },
-  methods: {
-      
-  },
+  data: () => ({ hover:true, }),
+  mounted() {},
+  methods: {},
 };
 </script>
