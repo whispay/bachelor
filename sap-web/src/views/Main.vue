@@ -19,7 +19,7 @@
     {{ tables_selected}}
 
     <h1>{{schemas_selected}}</h1>
-    <Table />
+    <Table v-bind:table_name ="Personen" />
   </div>
 </template>
 
@@ -39,6 +39,7 @@ export default {
       schemas_selected: [],
       Schemas: "",
       tables_selected: [],
+      Personen:"Personen",
     };
   },
   methods: {
