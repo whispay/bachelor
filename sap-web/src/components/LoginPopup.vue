@@ -28,7 +28,7 @@
                 <v-text-field label="Password" v-model="password"></v-text-field>
         
             </v-form>
-                <v-btn class="accent mr-2" @click.stop.prevent="submit"> Login </v-btn>
+                <v-btn class="accent mr-2" v-on:click.stop.prevent="submit"> Login </v-btn>
                 <v-btn class="secondary"  @click="dialog = false"> Abort </v-btn>
         </v-card-text>
 

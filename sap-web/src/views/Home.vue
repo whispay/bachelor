@@ -1,33 +1,65 @@
 <template>
   <div class="home">
     <h1>Homepage</h1>
-    <p>{{Schemas[0]}} </p>
-    <Tabs />
+    <p>{{ Schemas }}</p>
+    <v-data-table
+      :headers="headers"
+      :items="items"
+      :items-per-page="5"
+      class="elevation-1"
+    ></v-data-table>
+    {{ col_names }}
   </div>
 </template>
 
 <script>
 // @ is an alias to /src
-import axios from 'axios'
-import Tabs from "@/components/Tabs";
+import axios from "axios";
 
 export default {
+  components: {},
 
-  components: {Tabs},
-  
   data() {
     return {
-      Schemas: [],
+      col_names: [],
+      headers: [],
+      items: [],
     };
   },
-  methods: {
-    
-  },
+
   mounted() {
-      // fetch data from a url endpoint
-    const response = axios.get("http://localhost:3000/tables/schema_name=UPHAN");
+    // fetch data from a url endpoint
+    const response = axios.get(
+      "http://localhost:3000/tables/table_name=Personen"
+    );
     Promise.resolve(response).then((values) => {
-    this.Schemas = ((values.data))});
+      this.headers = this.toVFormatHeader(this.getHeader(values.data));
+      this.items =values.data;
+    });
+  },
+  methods: {
+    getHeader(data) {
+      var header = Object.getOwnPropertyNames(data[0]);
+      return header;
+    },
+    
+    toVFormatHeader(data) {
+      var array = [];
+      for (var i = 0; i < data.length; i++) {
+        var obj = {};
+        if (i == 0) {
+          (obj.text = data[i]),
+            (obj.value = data[i]),
+            (obj.align = "start"),
+            (obj.sortable = false);
+        } else {
+          (obj.text = data[i]), (obj.value = data[i]);
+        }
+
+        array.push(obj);
+      }
+      return array;
+    },
   },
 };
 </script>

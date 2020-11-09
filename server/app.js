@@ -59,6 +59,10 @@ app.get('/schemas/schema_name=:schema_name', (req,res) =>{
     sapRequest(res, sql_query)
  })
 
+ app.get('/tables/table_name=:table_name', (req,res) =>{
+    var table_name = req.params.table_name.toUpperCase();
+    sapRequest(res, "SELECT * from " + table_name);
+ })
 
  app.get('/tables/schema_name=:schema_name', (req,res) =>{
     var schema_names = req.params.schema_name.split("&");
