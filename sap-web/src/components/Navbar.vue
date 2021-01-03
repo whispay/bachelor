@@ -173,6 +173,7 @@ export default {
         this.user.LoginToggler = false;
         this.confirmationMsg = "Erfolgreich ausgeloggt";
         this.confirmation = "";
+        this.LoginBtnText = "Sign In";
 
       }
     },

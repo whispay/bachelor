@@ -1,10 +1,10 @@
 <template>
   <div class="home">
-    <v-container class="grey lighten-3">
+    <v-container class="grey lighten-3" v-show="loginToken">
       <v-row no-gutters>
         <v-col :key="1" cols="12" sm="4">
           <v-card class="pa-2 mr-3" outlined tile>
-            <v-btn @click="getSchemaNames"> </v-btn>
+            <!--<v-btn @click="getSchemaNames"> </v-btn> -->
             <v-list :disabled="isLoading">
               <v-list-group v-for="s in schema_names" :key="s.index">
                 <template v-slot:activator>
@@ -44,11 +44,15 @@
                 rows="8"
                 v-model="sqlText"
               ></v-textarea>
+              <p id="hintText" class="red--text font-weight-light">
+                {{ hintText }}
+              </p>
+              <p class="green--text font-weight-light">{{ successText }}</p>
             </v-container>
             <v-btn @click="submitSqlText()" color="accent">Submit</v-btn>
             <v-btn @click="clearSqlText()" color="secondary">Clear</v-btn>
+             <v-btn @click="forceUpdate()" color="success"><v-icon>cached</v-icon></v-btn>
           </v-card>
-
           <!-- DatenTabelle -->
           <v-data-table
             :headers="headers"
@@ -73,17 +77,15 @@
 <script>
 // @ is an alias to /src
 import axios from "axios";
+import Vue from "vue";
 
 export default {
   components: {},
   props: ["loginToken"],
   data() {
     return {
-      admins: [
-        ["Management", "mdi-account-multiple-outline"],
-        ["Settings", "mdi-cog-outline"],
-      ],
-      sqlText: "HALLO",
+ 
+      sqlText: "",
       isLoading: false,
       table_names: "",
       schema_names: "",
@@ -91,10 +93,13 @@ export default {
       headers: [],
       items: [],
       dataTable: [],
+      hintText: "",
+      successText: "",
     };
   },
 
   mounted() {
+    this.getSchemaNames();
     /* fetch data from a url endpoint
     const response = axios.get(
       "http://localhost:3000/tables/table_name=Personen"
@@ -105,24 +110,46 @@ export default {
     });*/
   },
   methods: {
+    forceUpdate() {
+      Vue.forceUpdate();
+    },
     clearSqlText() {
       this.sqlText = "";
+      this.successText = "";
+      this.hintText = "";
     },
+
     submitSqlText() {
+      this.hintText = "";
+      this.successText = "";
       axios
         .post("http://localhost:3000/sqlQuery", {
           sqlQuery: this.sqlText,
         })
         .then((response) => {
           Promise.resolve(response).then((values) => {
-            this.headers = this.toVFormatHeader(this.getHeader(values.data));
-        this.items = values.data;
-        this.dataTable.$forceUpdate();
+            //Anfrage ohne Statuscode = kein Fehler
+            if (values.data.code == undefined) {
+              //Anfrage mit einer Leeren Rückgabe
+              if (values.data.length != 0) {
+                this.headers = this.toVFormatHeader(
+                  this.getHeader(values.data)
+                );
+                this.items = values.data;
+                this.successText = "Success";
+                this.dataTable.$forceUpdate();
+              } else {
+                this.successText = "Success - But Table is empty.";
+              }
+            } else {
+              this.hintText =
+                "Code: " + values.data.code + " Msg: " + values.data.message;
+            }
           });
           console.log(response);
         })
-        .catch((error) => {
-          console.log(error);
+        .catch(function (err) {
+          console.log(err);
         });
     },
     getSchemaNames() {
@@ -158,7 +185,6 @@ export default {
       Promise.resolve(await response).then((values) => {
         this.headers = this.toVFormatHeader(this.getHeader(values.data));
         this.items = values.data;
-        this.sqlText = values.data + " ";
       });
     },
     toVFormatHeader(data) {

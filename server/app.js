@@ -19,29 +19,35 @@ var r;
 async function sapRequest(res, sql) {
     await conn.connect(config.dbAccess, err => {
         if (err) {
+            res.send(err);
             console.log(err);
             conn.disconnect();
             console.log("Server Disconnected")
         } else {
             conn.exec(sql, async (err, results) => {
                 if (err) {
-                    console.log(err);
+                    res.send(err);
+                    console.log(err  + "THIS IS A ERROR");
                     conn.disconnect();
                     console.log("Server Disconnected")
                 } else {
                     let r = await results;
-                    console.log("Schema", typeof r);
+                    console.log("Schema", r);
                     
+                    //When doing a Insert or Delete the Response is a status Code
                     if (typeof r == 'number') {
-                        //TODO WENN MAN DELETE ODER INSERT BEFEHLE MACHT DANN SENDET ER ALS RESPONSE EIN STATUS ZURÜCK UND KEIN OBJEKT. DER PROMISE WARTET ABER AUF EIN OBJEKT UM ES ZU RESOLVEN. WENN PROMISE NICHT ERFUELLT WIRD = ENDLOSSCHLEIFE 
-                        res.send({SCHEMA_NAME:'TESTSCHEMA'})
                         conn.disconnect();
-                        console.log("Server Disconnected")
-                    } else {
+                        console.log("Server Disconnected"); 
+                    } 
+                    //When Doing a CREATE, the Response is undefined
+                    else if(typeof r == undefined) {
                         conn.disconnect();
-                        console.log("Server Disconnected")
-
+                        console.log("Server Disconnected");    
+                    //SELECT
+                    }else {
                         res.send(r);
+                        conn.disconnect();
+                        console.log("Server Disconnected");
                     }
                 }
             });
