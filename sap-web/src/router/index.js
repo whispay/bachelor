@@ -21,12 +21,8 @@ const routes = [
     name: 'Graph',
     component: () => import('../views/Graph.vue')
   }
-  ,
-  {
-    path: '/main',
-    name: 'Main',
-    component: () => import('../views/Main.vue')
-  }
+  
+ 
 ]
 
 const router = new VueRouter({
