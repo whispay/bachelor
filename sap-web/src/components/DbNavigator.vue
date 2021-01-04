@@ -28,6 +28,7 @@
         </v-list>
       </v-list-group>
     </v-list>
+    {{column_names}}
   </v-card>
 </template>
 
@@ -35,21 +36,19 @@
 // @ is an alias to /src
 import axios from "axios";
 
-
 export default {
   components: {},
   props: ["loginToken"],
   data() {
     return {
- 
       isLoading: false,
       table_names: "",
       schema_names: "",
-      table:{
-          headers: [],
-          items: []
-      }
-
+      table: {
+        headers: [],
+        items: [],
+      },
+    
     };
   },
 
@@ -57,8 +56,26 @@ export default {
     this.getSchemaNames();
   },
   methods: {
- 
-   
+    getColumnNames(table_name) {
+      let response = axios.get(
+        "http://localhost:3000/columns/table_name=" + table_name
+      );
+      Promise.resolve(response).then((values) => {
+        this.table.headers = this.filterColumnName(values.data);
+    
+      });
+    },
+
+    filterColumnName(data) {
+      let column_names = [];
+      for (var i = 0; i < data.length; i++) {
+        var obj = {};
+        obj.text = data[i].COLUMN_NAME;
+        obj.value = data[i].COLUMN_NAME;
+        column_names.push(obj);
+      }
+      return column_names;
+    },
     getSchemaNames() {
       let response = axios.get("http://localhost:3000/schemas/names");
       Promise.resolve(response).then((values) => {
@@ -91,10 +108,16 @@ export default {
       );
 
       Promise.resolve(await response).then((values) => {
-        this.table.headers = this.toVFormatHeader(this.getHeader(values.data));
-        this.table.items = values.data;
+        if (Object.entries(values.data).length === 0) {
+          this.getColumnNames(tablename);
+        } else {
+          this.table.headers = this.toVFormatHeader(
+            this.getHeader(values.data)
+          );
+          this.table.items = values.data;
+        }
       });
-      this.$emit('getTable', this.table);
+      this.$emit("getTable", this.table);
     },
     toVFormatHeader(data) {
       var array = [];

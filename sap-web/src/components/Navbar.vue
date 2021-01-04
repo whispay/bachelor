@@ -13,7 +13,7 @@
       <v-spacer></v-spacer>
       <v-spacer></v-spacer>
       <v-spacer></v-spacer>
-
+      {{testText}}
       <v-text-field
         v-show="!!!this.confirmation"
         background-color="white"
@@ -24,7 +24,6 @@
         :rules="rules"
         v-model="user.username"
         :success="!!this.confirmation"
-        
       ></v-text-field>
 
       <v-text-field
@@ -52,7 +51,7 @@
             v-bind="attrs"
             v-on="on"
           >
-            {{LoginBtnText}} <v-icon right>login</v-icon></v-btn
+            {{ LoginBtnText }} <v-icon right>login</v-icon></v-btn
           >
         </template>
         <v-card>
@@ -92,18 +91,18 @@
         </v-list-item>
       </v-list>
     </v-navigation-drawer>
+    
   </nav>
 </template>
 
 
 
 <script>
-//import LoginPopup from '../components/LoginPopup'
 import axios from "axios";
 export default {
-  //components: { LoginPopup },
   data() {
     return {
+      testText: "TEST",
       show: false,
       rules: [],
       LoginBtnText: "Sign In",
@@ -119,7 +118,9 @@ export default {
       confirmationMsg: "",
       links: [
         { icon: "home", text: "Home", route: "/" },
+        { icon: "table_chart", text: "DBMS", route: "/dbms" },
         { icon: "show_chart", text: "Graph", route: "/graph" },
+        { icon: "map", text: "Map", route: "/map" },
         { icon: "person", text: "Team", route: "/team" },
       ],
     };
@@ -137,44 +138,61 @@ export default {
       });
     },
 
+    login: async function () {
+      let response = axios.post("http://localhost:3000/api/login", {
+        user: this.user,
+      });
+      Promise.resolve(await response).then((values) => {
+           this.testpost(Object.values(values.data));
+      });
+   
+    },
+    testpost: async function (token) {
+      let headers = { 'Authorization': "Bearer " + (token) };
+      this.testText = headers;
+      let response = axios.post("http://localhost:3000/api/posts","",{
+        headers: headers,
+      });
+      Promise.resolve(await response).then((values) => {
+        this.testText = values.data;
+      });
+    },
+
     async submit() {
-      if(this.user.LoginToggler == false) {
-      if(this.user.username =="" || this.user.password ==""){
-        this.rules = [(value) => !!value || "Required."]
-        this.confirmationMsg= "Beide Felder müssen ausgefüllt sein!"
-      }
-      
-      else{
-      this.loading = true;
-      console.log(this.user.username, this.user.password);
-      //this.$router.push("/main");
+      if (this.user.LoginToggler == false) {
+        if (this.user.username == "" || this.user.password == "") {
+          this.rules = [(value) => !!value || "Required."];
+          this.confirmationMsg = "Beide Felder müssen ausgefüllt sein!";
+        } else {
+          this.loading = true;
+          console.log(this.user.username, this.user.password);
+          //this.$router.push("/main");
 
-      await this.getConfirmation();
+          await this.getConfirmation();
 
-      if (this.confirmation == true) {
-        this.confirmationMsg = "Login war erfolgreich.";
-        this.rules = [];
-        this.LoginBtnText = "Sign Out";
-        this.user.LoginToggler = true;
-      } else if (this.confirmation == false) {
-        this.confirmationMsg = "Login war nicht erfolgreich.";
-        this.rules = [
-          (value) => !!value || "Required.",
-          () => `The username and password you entered don't match`,
-        ];
-      }
-      this.loading = false;
-      this.$emit("submit", this.user);
-      }
-      }
-      else {
+          if (this.confirmation == true) {
+            this.confirmationMsg = "Login war erfolgreich.";
+            this.login();
+            this.rules = [];
+            this.LoginBtnText = "Sign Out";
+            this.user.LoginToggler = true;
+          } else if (this.confirmation == false) {
+            this.confirmationMsg = "Login war nicht erfolgreich.";
+            this.rules = [
+              (value) => !!value || "Required.",
+              () => `The username and password you entered don't match`,
+            ];
+          }
+          this.loading = false;
+          this.$emit("submit", this.user);
+        }
+      } else {
         this.user.username = "";
         this.user.password = "";
         this.user.LoginToggler = false;
         this.confirmationMsg = "Erfolgreich ausgeloggt";
         this.confirmation = "";
         this.LoginBtnText = "Sign In";
-
       }
     },
   },

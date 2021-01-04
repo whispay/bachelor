@@ -20,8 +20,17 @@ const routes = [
     path: '/graph',
     name: 'Graph',
     component: () => import('../views/Graph.vue')
+  },
+  {
+    path: '/map',
+    name: 'Map',
+    component: () => import('../views/Map.vue')
+  },
+  {
+    path: '/dbms',
+    name: 'DBMS',
+    component: () => import('../views/Dbms.vue')
   }
-  
  
 ]
 

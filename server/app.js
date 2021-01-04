@@ -1,5 +1,6 @@
 const express = require('express');
 const app = express();
+const jwt = require('jsonwebtoken');
 const bodyParser = require('body-parser');
 app.use(bodyParser.json({ extended: true }));
 const config = require('./config/config.json');
@@ -8,6 +9,8 @@ var cors = require('cors');
 
 //Connect to DB
 const hana = require("@sap/hana-client");
+const { json } = require('express');
+const { restart } = require('nodemon');
 
 
 const conn = hana.createConnection();
@@ -27,24 +30,24 @@ async function sapRequest(res, sql) {
             conn.exec(sql, async (err, results) => {
                 if (err) {
                     res.send(err);
-                    console.log(err  + "THIS IS A ERROR");
+                    console.log(err + "THIS IS A ERROR");
                     conn.disconnect();
                     console.log("Server Disconnected")
                 } else {
                     let r = await results;
                     console.log("Schema", r);
-                    
+
                     //When doing a Insert or Delete the Response is a status Code
                     if (typeof r == 'number') {
                         conn.disconnect();
-                        console.log("Server Disconnected"); 
-                    } 
+                        console.log("Server Disconnected");
+                    }
                     //When Doing a CREATE, the Response is undefined
-                    else if(typeof r == undefined) {
+                    else if (typeof r == undefined) {
                         conn.disconnect();
-                        console.log("Server Disconnected");    
-                    //SELECT
-                    }else {
+                        console.log("Server Disconnected");
+                        //SELECT
+                    } else {
                         res.send(r);
                         conn.disconnect();
                         console.log("Server Disconnected");
@@ -74,6 +77,66 @@ function sapAuthentication(res, username, password) {
         }
     })
 }
+
+//Authentication
+
+
+app.post('/api/login', (req, res) => { 
+    
+    /*const user= {
+        id:1,
+        username: 'jia',
+        email: "dschialin@gmail.com"
+    }*/
+    const user = req.body.user;
+    jwt.sign({user:user}, 'secretkey', {expiresIn: '360s'} ,(err, token)=>{
+        res.json({
+            token:token
+        })
+    }); 
+});
+// FORMAT OF TOKEN
+// Authorization: Bearer <access_token>
+
+//Middleware function
+function verifyToken(req, res, next){
+    //Get auth header value
+    const bearerHeader = req.headers['authorization'];
+    //Check if bearer is undefined
+    if(typeof bearerHeader !== 'undefined'){
+        //Split at the space
+        const bearer = bearerHeader.split(' ');
+        // Get Token from array
+        const bearerToken = bearer[1];
+        // Set the Token
+        req.token = bearerToken;
+        // Next middleware function
+        next();
+    }else{
+        //Forbidden
+        res.sendStatus(403);
+    }
+};
+
+// Auth POST
+app.post('/api/posts', verifyToken, (req, res) => {
+    jwt.verify(req.token, 'secretkey', (err, authData)=>{
+        if(err){
+            res.sendStatus(403)
+        } else{
+            res.json({
+                message: 'Post created...',
+                authData
+            });
+        }
+    });
+})
+
+//ROUTES-Columns
+
+app.get('/columns/table_name=:table_name', (req, res) => {
+    sapRequest(res, "SELECT COLUMN_NAME FROM SYS.TABLE_COLUMNS WHERE TABLE_NAME = '" + req.params.table_name + "'")
+})
 
 //ROUTES-SCHEMA
 app.get('/authentication/uname=:uname&pwd=:pwd', (req, res) => {
@@ -147,4 +210,4 @@ app.post('/sqlQuery', (req, res) => {
     sapRequest(res, req.body.sqlQuery)
 
 })
-app.listen(3000);
+app.listen(3000, () => console.log('Server started on Port 3000'));
