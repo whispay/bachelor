@@ -1,6 +1,6 @@
 <template>
   <v-card class="pa-2 mr-3" outlined tile>
-    <!--<v-btn @click="getSchemaNames"> </v-btn> -->
+    <v-card-title> Schemas </v-card-title> <v-btn @click="getSchemaNames()"> Show </v-btn>
     <v-list :disabled="isLoading">
       <v-list-group v-for="s in schema_names" :key="s.index">
         <template v-slot:activator>
@@ -28,7 +28,6 @@
         </v-list>
       </v-list-group>
     </v-list>
-    {{column_names}}
   </v-card>
 </template>
 
@@ -38,7 +37,7 @@ import axios from "axios";
 
 export default {
   components: {},
-  props: ["loginToken"],
+  props: ["userToken"],
   data() {
     return {
       isLoading: false,
@@ -58,7 +57,7 @@ export default {
   methods: {
     getColumnNames(table_name) {
       let response = axios.get(
-        "http://localhost:3000/columns/table_name=" + table_name
+        "http://localhost:3000/api/columns/table_name=" + table_name, {headers: this.userToken}
       );
       Promise.resolve(response).then((values) => {
         this.table.headers = this.filterColumnName(values.data);
@@ -77,18 +76,17 @@ export default {
       return column_names;
     },
     getSchemaNames() {
-      let response = axios.get("http://localhost:3000/schemas/names");
+      let response = axios.get("http://localhost:3000/api/schemas/names", {headers: this.userToken});
       Promise.resolve(response).then((values) => {
         this.schema_names = values.data;
       });
     },
 
-    async getTableNames(schema_name) {
+    getTableNames(schema_name) {
       this.isLoading = true;
       let response = axios.get(
-        "http://localhost:3000/tables/names/schema_name=" + schema_name
-      );
-      Promise.resolve(await response).then((values) => {
+        "http://localhost:3000/api/tables/names/schema_name=" + schema_name, {headers: this.userToken});
+        Promise.resolve(response).then((values) => {
         this.table_names = values.data;
         this.isLoading = false;
       });
@@ -104,7 +102,7 @@ export default {
       this.table.items = [];
 
       const response = axios.get(
-        "http://localhost:3000/tables/table_name=" + tablename
+        "http://localhost:3000/api/tables/table_name=" + tablename, {headers: this.userToken}
       );
 
       Promise.resolve(await response).then((values) => {

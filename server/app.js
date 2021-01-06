@@ -1,25 +1,47 @@
+
+//Express
 const express = require('express');
+const { json } = require('express');
+const { restart } = require('nodemon');
 const app = express();
+
+//JWT Authentication
 const jwt = require('jsonwebtoken');
+
+//Read Configfile
 const bodyParser = require('body-parser');
 app.use(bodyParser.json({ extended: true }));
 const config = require('./config/config.json');
+
 //MIDDLEWARES - Function that executes when routes are beeing hit
 var cors = require('cors');
+app.use(cors());
 
 //Connect to DB
 const hana = require("@sap/hana-client");
-const { json } = require('express');
-const { restart } = require('nodemon');
-
-
 const conn = hana.createConnection();
 
-app.use(cors());
+//More Route Middlewares
+const authRoute = require('./routes/auth');
+app.use('/api/user', authRoute);
+const schemaRoute = require('./routes/schemas');
+app.use('/api/schemas', schemaRoute);
+const tablesRoute = require('./routes/tables');
+app.use('/api/tables', tablesRoute);
+const columnsRoute = require('./routes/columns');
+app.use('/api/columns', columnsRoute);
+const sqlRoute = require('./routes/sql');
+app.use('/api/sql', sqlRoute);
 
-var r;
+//Listen on Port 3000 when Server starts
+app.listen(3000, () => console.log('Server started on Port 3000'));
 
-async function sapRequest(res, sql) {
+
+// ---------------Authentication v2 -------------------------//
+/*
+async function sapRequestAuth(res, sql, username, password) {
+    config.dbAccess.uid = username;
+    config.dbAccess.pwd = password;
     await conn.connect(config.dbAccess, err => {
         if (err) {
             res.send(err);
@@ -56,54 +78,27 @@ async function sapRequest(res, sql) {
             });
         }
     });
-
 }
 
-function sapAuthentication(res, username, password) {
-    config.dbAccess.uid = username;
-    config.dbAccess.pwd = password;
-    conn.connect(config.dbAccess, err => {
-        if (err) {
-            res.send(false);
-            console.log(err);
-            console.log(config.dbAccess);
-            conn.disconnect();
-            console.log("Server Disconnected");
-        } else {
-            res.send(true);
-            console.log("Server Connected");
-            conn.disconnect();
-            console.log("Server Disconnected");
-        }
-    })
-}
 
-//Authentication
+app.post('/api/v2/login', (req, res) => {
 
-
-app.post('/api/login', (req, res) => { 
-    
-    /*const user= {
-        id:1,
-        username: 'jia',
-        email: "dschialin@gmail.com"
-    }*/
     const user = req.body.user;
-    jwt.sign({user:user}, 'secretkey', {expiresIn: '360s'} ,(err, token)=>{
+    jwt.sign({ 'user': user }, 'secretkey', { expiresIn: '360s' }, (err, token) => {
         res.json({
-            token:token
+            token: token
         })
-    }); 
+    });
 });
 // FORMAT OF TOKEN
 // Authorization: Bearer <access_token>
 
 //Middleware function
-function verifyToken(req, res, next){
+function verifyToken(req, res, next) {
     //Get auth header value
     const bearerHeader = req.headers['authorization'];
     //Check if bearer is undefined
-    if(typeof bearerHeader !== 'undefined'){
+    if (typeof bearerHeader !== 'undefined') {
         //Split at the space
         const bearer = bearerHeader.split(' ');
         // Get Token from array
@@ -112,46 +107,53 @@ function verifyToken(req, res, next){
         req.token = bearerToken;
         // Next middleware function
         next();
-    }else{
+    } else {
         //Forbidden
         res.sendStatus(403);
     }
 };
 
-// Auth POST
-app.post('/api/posts', verifyToken, (req, res) => {
-    jwt.verify(req.token, 'secretkey', (err, authData)=>{
-        if(err){
-            res.sendStatus(403)
-        } else{
-            res.json({
-                message: 'Post created...',
-                authData
-            });
+// Authenticate the Username and Password from the JWT Token
+app.post('/api/v2/auth', verifyToken, (req, res) => {
+    jwt.verify(req.token, 'secretkey', (err, authData) => {
+        if (err) {
+            res.sendStatus(403);
+        } else {
+            (sapAuthentication(res, authData.user.username, authData.user.password));
+
         }
     });
 })
 
-//ROUTES-Columns
 
-app.get('/columns/table_name=:table_name', (req, res) => {
-    sapRequest(res, "SELECT COLUMN_NAME FROM SYS.TABLE_COLUMNS WHERE TABLE_NAME = '" + req.params.table_name + "'")
-})
+// ------------------ API v2 DBMS -------------------------//
 
 //ROUTES-SCHEMA
-app.get('/authentication/uname=:uname&pwd=:pwd', (req, res) => {
-    sapAuthentication(res, req.params.uname, req.params.pwd)
+
+app.get('/api/v2/schemas', verifyToken, (req, res) => {
+    jwt.verify(req.token, 'secretkey', (err, authData) => {
+        if (err) {
+            res.sendStatus(403);
+        } else {
+            sapRequestAuth(res, "SELECT * from SCHEMAS", authData.user.username, authData.user.password);
+        }
+    });
+
 })
 
-app.get('/schemas', (req, res) => {
-    sapRequest(res, "SELECT * from SCHEMAS")
+app.get('/api/v2/schemas/names', verifyToken, (req, res) => {
+    jwt.verify(req.token, 'secretkey', (err, authData) => {
+        if (err) {
+            console.log(authData);
+            res.sendStatus(403);
+        } else {
+            console.log(authData);
+            sapRequestAuth(res, "SELECT SCHEMA_NAME from SCHEMAS", authData.user.username, authData.user.password);
+        }
+    });
 })
 
-app.get('/schemas/names', (req, res) => {
-    sapRequest(res, "SELECT SCHEMA_NAME from SCHEMAS")
-})
-
-app.get('/schemas/schema_name=:schema_name', (req, res) => {
+app.get('/api/v2/schemas/schema_name=:schema_name', verifyToken, (req, res) => {
     var schema_names = req.params.schema_name.split("&");
     var sql_query = "SELECT * from SCHEMAS WHERE ";
     for (var i = 0; i < schema_names.length; i++) {
@@ -161,32 +163,48 @@ app.get('/schemas/schema_name=:schema_name', (req, res) => {
             sql_query = sql_query + "SCHEMA_NAME = " + schema_names[i]
         }
         sql_query = sql_query + "SCHEMA_NAME = " + schema_names[i] + " OR "
-    }
+    };
+    jwt.verify(req.token, 'secretkey', (err, authData) => {
+        if (err) {
+            console.log(authData);
+            res.sendStatus(403);
+        } else {
+            sapRequestAuth(res, sql_query, authData.user.username, authData.user.password);
+        }
+    });
 
-    sapRequest(res, sql_query)
 })
 
 //ROUTES-TABLES
-app.get('/tables/table_name=:table_name', (req, res) => {
+app.get('/api/v2/tables/table_name=:table_name',verifyToken, (req, res) => {
     var table_name = req.params.table_name.toUpperCase();
-    sapRequest(res, "SELECT * from " + table_name);
-})
-
-app.get('/tables/names/schema_name=:schema_name', (req, res) => {
-    var schema_names = req.params.schema_name.split("&");
-    var sql_query = "SELECT TABLE_NAME from TABLES WHERE ";
-    for (var i = 0; i < schema_names.length; i++) {
-        if (i + 1 == schema_names.length) {
-            sql_query = sql_query + "SCHEMA_NAME = '" + schema_names[i] + "'"
+    jwt.verify(req.token, 'secretkey', (err, authData) => {
+        if (err) {
+            console.log(authData);
+            res.sendStatus(403);
         } else {
-            sql_query = sql_query + "SCHEMA_NAME = " + schema_names[i] + " OR "
+            sapRequestAuth(res,  "SELECT * from "+table_name, authData.user.username, authData.user.password);
         }
-    }
-    sapRequest(res, sql_query)
+    });
+ 
+})
+
+app.get('/api/v2/tables/names/schema_name=:schema_name', verifyToken, (req, res) => {
+
+    jwt.verify(req.token, 'secretkey', (err, authData) => {
+        if (err) {
+            console.log("Fehlgeschlagen: "+ authData);
+            res.sendStatus(403);
+        } else {
+            console.log(authData);
+            sapRequestAuth(res,  "SELECT TABLE_NAME from TABLES WHERE SCHEMA_NAME="+ "'" + req.params.schema_name +"'", authData.user.username, authData.user.password);
+        }
+    });
+   
 })
 
 
-app.get('/tables/schema_name=:schema_name', (req, res) => {
+app.get('/api/v2/tables/schema_name=:schema_name', verifyToken,(req, res) => {
     var schema_names = req.params.schema_name.split("&");
     var sql_query = "SELECT * from TABLES WHERE ";
     for (var i = 0; i < schema_names.length; i++) {
@@ -196,18 +214,14 @@ app.get('/tables/schema_name=:schema_name', (req, res) => {
             sql_query = sql_query + "SCHEMA_NAME = " + schema_names[i] + " OR "
         }
     }
-
-    sapRequest(res, sql_query)
-})
-
-app.get('/sql=:sql_query', (req, res) => {
-    sapRequest(res, req.params.sql_query)
-})
-
-app.post('/sqlQuery', (req, res) => {
-    console.log('SQLQUERY: ', req.body);
-
-    sapRequest(res, req.body.sqlQuery)
+    jwt.verify(req.token, 'secretkey', (err, authData) => {
+        if (err) {
+            console.log(authData);
+            res.sendStatus(403);
+        } else {
+            sapRequestAuth(res,  sql_query, authData.user.username, authData.user.password);
+        }
+    });
 
 })
-app.listen(3000, () => console.log('Server started on Port 3000'));
+*/

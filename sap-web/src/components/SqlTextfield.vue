@@ -42,7 +42,7 @@ export default {
       this.hintText = "";
       this.successText = "";
       axios
-        .post("http://localhost:3000/sqlQuery", {
+        .post("http://localhost:3000/api/sql/sqlQuery", {
           sqlQuery: this.sqlText,
         })
         .then((response) => {

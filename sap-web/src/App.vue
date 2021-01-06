@@ -1,10 +1,10 @@
 <template>
   <v-app>
     <v-main class="blue lighten-4">
-      <Navbar @submit="user = $event" />
+      <Navbar @submit="userToken = $event" />
 
-      <router-view :loginToken='user.LoginToggler'  class="px-15 py-10"> </router-view>
-
+      <router-view :userToken='userToken'  class="px-15 py-10"> </router-view>
+    
   
     </v-main>
   </v-app>
@@ -19,7 +19,7 @@ export default {
   
   data(){
     return {
-      user: {
+      userToken: {
         
       }
     }

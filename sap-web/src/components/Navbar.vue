@@ -13,9 +13,9 @@
       <v-spacer></v-spacer>
       <v-spacer></v-spacer>
       <v-spacer></v-spacer>
-      {{testText}}
+
       <v-text-field
-        v-show="!!!this.confirmation"
+        v-show="!!!this.user.LoginToggler"
         background-color="white"
         class="pt-5 mx-2"
         input="white"
@@ -27,7 +27,7 @@
       ></v-text-field>
 
       <v-text-field
-        v-show="!!!this.confirmation"
+        v-show="!!!this.user.LoginToggler"
         background-color="white"
         class="pt-5 mx-2 input-group--focused"
         label="Password"
@@ -91,18 +91,16 @@
         </v-list-item>
       </v-list>
     </v-navigation-drawer>
-    
   </nav>
 </template>
 
 
-
 <script>
 import axios from "axios";
+
 export default {
   data() {
     return {
-      testText: "TEST",
       show: false,
       rules: [],
       LoginBtnText: "Sign In",
@@ -110,9 +108,10 @@ export default {
       drawer: false,
       loading: false,
       user: {
-        username: "",
-        password: "",
+        username: "uphan",
+        password: "Bcdefgh1",
         LoginToggler: false,
+        userToken: "",
       },
       confirmation: "",
       confirmationMsg: "",
@@ -126,75 +125,139 @@ export default {
     };
   },
   methods: {
-    getConfirmation: async function () {
-      let response = axios.get(
-        "http://localhost:3000/authentication/uname=" +
-          this.user.username +
+    //-------------------------Hilfsfunktionen v1-----------------------//
+    submit: async function () {
+      if (this.user.username === "" || this.user.password === "") {
+        this.loginFailed();
+      } else {
+        await this.login(this.user);
+
+        if (
+          this.user.LoginToggler === true &&
+          this.LoginBtnText === "Sign In"
+        ) {
+          this.loginSuccess();
+        } else if (
+          this.user.LoginToggler === true &&
+          this.LoginBtnText === "Sign Out"
+        ) {
+          this.logout();
+        } else {
+          this.loginFailed();
+        }
+      }
+    },
+
+    login: async function (user) {
+      let response = axios.post(
+        "http://localhost:3000/api/user/login/uname=" +
+          user.username +
           "&pwd=" +
-          this.user.password
+          user.password
       );
       Promise.resolve(await response).then((values) => {
-        this.confirmation = values.data;
+        if(values.data === false){
+          this.user.LoginToggler = values.data;
+        } else{
+          this.user.LoginToggler = true;
+          this.user.userToken = values.data;
+        }
+        
       });
+    },
+    loginSuccess: function () {
+      this.confirmationMsg = "Login war erfolgreich.";
+      this.rules = [];
+      this.LoginBtnText = "Sign Out";
+      this.$emit("submit", this.user);
+      this.$router.push("/dbms");
+    },
+    loginFailed: function () {
+      this.confirmationMsg = "Login war nicht erfolgreich.";
+      this.rules = [
+        (value) => !!value || "Required.",
+        () => `The username and password you entered don't match`,
+      ];
+    },
+    logout() {
+      this.user.username = "";
+      this.user.password = "";
+      this.user.LoginToggler = false;
+      this.user.userToken = "";
+      this.confirmationMsg = "Erfolgreich ausgeloggt";
+      this.confirmation = "";
+      this.LoginBtnText = "Sign In";
+      this.$router.push("/home");
+      this.$emit("submit", this.user);
     },
 
-    login: async function () {
-      let response = axios.post("http://localhost:3000/api/login", {
-        user: this.user,
-      });
-      Promise.resolve(await response).then((values) => {
-           this.testpost(Object.values(values.data));
-      });
-   
-    },
-    testpost: async function (token) {
-      let headers = { 'Authorization': "Bearer " + (token) };
-      this.testText = headers;
-      let response = axios.post("http://localhost:3000/api/posts","",{
-        headers: headers,
-      });
-      Promise.resolve(await response).then((values) => {
-        this.testText = values.data;
-      });
-    },
-
-    async submit() {
+    //-------------------------Hilfsfunktionen v2-----------------------//
+    /*
+    async submitV2() {
       if (this.user.LoginToggler == false) {
         if (this.user.username == "" || this.user.password == "") {
           this.rules = [(value) => !!value || "Required."];
           this.confirmationMsg = "Beide Felder müssen ausgefüllt sein!";
         } else {
           this.loading = true;
-          console.log(this.user.username, this.user.password);
+
           //this.$router.push("/main");
 
-          await this.getConfirmation();
+          //Set the UserToken
+          this.login(this.user);
 
-          if (this.confirmation == true) {
-            this.confirmationMsg = "Login war erfolgreich.";
-            this.login();
-            this.rules = [];
-            this.LoginBtnText = "Sign Out";
-            this.user.LoginToggler = true;
-          } else if (this.confirmation == false) {
-            this.confirmationMsg = "Login war nicht erfolgreich.";
-            this.rules = [
-              (value) => !!value || "Required.",
-              () => `The username and password you entered don't match`,
-            ];
-          }
           this.loading = false;
-          this.$emit("submit", this.user);
+          //this.$emit("submit", this.user);
         }
       } else {
-        this.user.username = "";
-        this.user.password = "";
-        this.user.LoginToggler = false;
-        this.confirmationMsg = "Erfolgreich ausgeloggt";
-        this.confirmation = "";
-        this.LoginBtnText = "Sign In";
+        this.logout();
       }
     },
+
+
+    //Creates and checks the JWT Token and return a boolean
+    loginV2: async function (user) {
+      let response = axios.post("http://localhost:3000/api/v2/login", {
+        user: user,
+      });
+      Promise.resolve(await response).then((values) => {
+        //this.test = (Object.values(values.data));
+        this.userToken = Object.values(values.data);
+        this.authenticate(Object.values(values.data));
+      });
+    },
+
+    // Sends the Token to the Server and tries to authenticate the userdata
+    authenticateV2: async function (token) {
+      var headers = this.createHeaders(token);
+      let response = axios.post("http://localhost:3000/api/v2/auth", "", {
+        headers: headers,
+      });
+      Promise.resolve(await response).then((values) => {
+        if (values.data == true) {
+          this.confirmation = true;
+          this.confirmationMsg = "Login war erfolgreich.";
+          this.rules = [];
+          this.LoginBtnText = "Sign Out";
+          this.user.LoginToggler = true;
+          this.$emit("submit", headers);
+          this.$router.push("/dbms");
+        }
+        if (values.data == false) {
+          this.confirmation = false;
+          this.confirmationMsg = "Login war nicht erfolgreich.";
+          this.rules = [
+            (value) => !!value || "Required.",
+            () => `The username and password you entered don't match`,
+          ];
+        }
+      });
+    },
+
+    createHeaders(token) {
+      let headers = { Authorization: "Bearer " + token };
+      return headers;
+    },*/
   },
 };
 </script>

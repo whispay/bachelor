@@ -2,8 +2,8 @@
   "dbAccess": {
     "host": "hanaicla.f4.htw-berlin.de",
     "port": 39015,
-    "uid": "uphan",
-    "pwd": "Bcdefgh1",
+    "uid": "",
+    "pwd": "",
     "databaseName": "HXE"
   },
   "here": {
